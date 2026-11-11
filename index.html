@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juan Sebastian Gilibarguen | Portafolio Dark 3D Neumorphism</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter & Space Grotesk -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js for 3D Background Canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <style>
+        :root {
+            /* Dark Neumorphic Color Palette */
+            --bg-color: #1a1e29;
+            --card-bg: #1e2230;
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent-cyan: #06b6d4;
+            --accent-purple: #8b5cf6;
+            
+            /* Dark Neumorphism Shadows */
+            --shadow-dark: #12151d;
+            --shadow-light: #242935;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4, .font-heading {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        /* 3D Background Canvas styling */
+        #canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Dark Neumorphic Base Styles */
+        .neu-card {
+            background: linear-gradient(145deg, #202535, #1b1e2a);
+            box-shadow: 10px 10px 22px var(--shadow-dark), -10px -10px 22px var(--shadow-light);
+            border-radius: 24px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .neu-card:hover {
+            box-shadow: 14px 14px 28px var(--shadow-dark), -14px -14px 28px var(--shadow-light);
+            transform: translateY(-2px);
+        }
+
+        .neu-card-inset {
+            background: var(--bg-color);
+            box-shadow: inset 5px 5px 12px var(--shadow-dark), inset -5px -5px 12px var(--shadow-light);
+            border-radius: 20px;
+        }
+
+        .neu-btn {
+            background: linear-gradient(145deg, #202535, #1b1e2a);
+            box-shadow: 6px 6px 14px var(--shadow-dark), -6px -6px 14px var(--shadow-light);
+            border-radius: 14px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .neu-btn:hover {
+            box-shadow: 8px 8px 18px var(--shadow-dark), -8px -8px 18px var(--shadow-light);
+            transform: translateY(-3px);
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+
+        .neu-btn:active, .neu-btn.active {
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+            transform: translateY(0);
+        }
+
+        .neu-input {
+            background: var(--bg-color);
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.02);
+            outline: none;
+            color: var(--text-main);
+            transition: all 0.3s ease;
+        }
+
+        .neu-input:focus {
+            box-shadow: inset 5px 5px 10px var(--shadow-dark), inset -5px -5px 10px var(--shadow-light), 0 0 10px rgba(6, 182, 212, 0.4);
+            border-color: var(--accent-cyan);
+        }
+
+        .neu-badge {
+            background: var(--bg-color);
+            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .neu-avatar {
+            box-shadow: 8px 8px 20px var(--shadow-dark), -8px -8px 20px var(--shadow-light);
+            border: 2px solid rgba(6, 182, 212, 0.4);
+        }
+
+        /* Glowing accents */
+        .glow-text-cyan {
+            text-shadow: 0 0 12px rgba(6, 182, 212, 0.5);
+        }
+
+        .glow-text-purple {
+            text-shadow: 0 0 12px rgba(139, 92, 246, 0.5);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a3142;
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-cyan);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative selection:bg-cyan-500 selection:text-black">
+
+    <!-- 3D Canvas Background -->
+    <canvas id="canvas-bg"></canvas>
+
+    <!-- Content Container wrapped to sit above canvas -->
+    <div class="relative z-10 flex-grow flex flex-col justify-between">
+
+        <!-- Header / Navigation -->
+        <header class="w-full py-6 px-6 md:px-12 backdrop-blur-md bg-[#1a1e29]/70 sticky top-0 z-50 border-b border-white/5">
+            <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 neu-card flex items-center justify-center text-cyan-400 font-bold text-xl">
+                        <i class="fa-solid fa-cube text-cyan-400"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg tracking-wide text-gray-100">Juan S. Gilibarguen</h1>
+                        <p class="text-xs text-cyan-400 font-medium tracking-wider">@gilibarguenjuansebastian-cpu</p>
+                    </div>
+                </div>
+                <nav class="flex items-center space-x-3 md:space-x-5">
+                    <a href="#proyectos" class="neu-btn px-4 py-2 text-xs font-semibold text-gray-300 hover:text-cyan-400 transition">Proyectos</a>
+                    <a href="#habilidades" class="neu-btn px-4 py-2 text-xs font-semibold text-gray-300 hover:text-cyan-400 transition">Habilidades</a>
+                    <a href="#contacto" class="neu-btn px-4 py-2 text-xs font-semibold text-gray-300 hover:text-cyan-400 transition">Contacto</a>
+                    <a href="https://github.com/gilibarguenjuansebastian-cpu" target="_blank" class="neu-btn w-10 h-10 flex items-center justify-center text-cyan-400 hover:text-white transition" title="GitHub Profile">
+                        <i class="fa-brands fa-github text-lg"></i>
+                    </a>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-6xl mx-auto px-6 md:px-12 py-10 w-full space-y-16">
+
+            <!-- Hero Section -->
+            <section class="neu-card p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 lg:gap-12 relative overflow-hidden">
+                <!-- Profile Picture with GitHub Avatar Integration -->
+                <div class="relative group">
+                    <div class="w-40 h-40 md:w-48 md:h-48 rounded-full neu-avatar overflow-hidden p-1 flex items-center justify-center bg-[#1a1e29]">
+                        <img 
+                            src="https://github.com/gilibarguenjuansebastian-cpu.png" 
+                            alt="Juan Sebastian Gilibarguen Profile" 
+                            class="w-full h-full object-cover rounded-full group-hover:scale-105 transition duration-500"
+                            onerror="this.src='https://placehold.co/200x200/1e2230/06b6d4?text=JSG'"
+                        >
+                    </div>
+                    <div class="absolute bottom-2 right-2 w-9 h-9 neu-badge flex items-center justify-center text-green-400 bg-[#1a1e29]" title="Disponible para colaborar">
+                        <i class="fa-solid fa-bolt text-sm animate-pulse text-cyan-400"></i>
+                    </div>
+                </div>
+
+                <div class="flex-1 text-center md:text-left space-y-4">
+                    <div class="inline-flex items-center gap-2 neu-badge px-3 py-1 text-xs font-semibold text-cyan-400 tracking-wider uppercase">
+                        <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+                        Desarrollador Software & UI 3D
+                    </div>
+                    <h2 class="text-3xl md:text-5xl font-bold text-white tracking-tight leading-tight">
+                        ¡Bienvenido a mi repositorio! <span class="inline-block animate-bounce">🚀</span>
+                    </h2>
+                    <p class="text-gray-400 text-base md:text-lg leading-relaxed">
+                        Hola, soy <span class="font-semibold text-cyan-400 glow-text-cyan">Juan Sebastian Gilibarguen</span>. Explora mi ecosistema de desarrollo con diseño Neomórfico Oscuro e interactividad 3D.
+                    </p>
+                    <div class="flex flex-wrap justify-center md:justify-start gap-4 pt-4">
+                        <a href="#proyectos" class="neu-btn px-6 py-3 text-sm font-semibold text-cyan-400 flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group"></i> Ver Repositorios
+                        </a>
+                        <a href="https://github.com/gilibarguenjuansebastian-cpu" target="_blank" class="neu-btn px-6 py-3 text-sm font-semibold text-gray-300 flex items-center gap-2 hover:text-purple-400">
+                            <i class="fa-brands fa-github text-lg"></i> Perfil GitHub
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3D Stat Cards Section -->
+            <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="neu-card p-6 text-center space-y-3 group">
+                    <div class="w-14 h-14 mx-auto neu-card-inset flex items-center justify-center text-cyan-400 text-2xl group-hover:scale-110 transition duration-300">
+                        <i class="fa-solid fa-code-branch"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-white">GitHub</h3>
+                    <p class="text-xs text-gray-400 uppercase tracking-wider font-medium">Control de Versiones</p>
+                </div>
+
+                <div class="neu-card p-6 text-center space-y-3 group">
+                    <div class="w-14 h-14 mx-auto neu-card-inset flex items-center justify-center text-purple-400 text-2xl group-hover:scale-110 transition duration-300">
+                        <i class="fa-solid fa-cubes"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-white">3D Soft UI</h3>
+                    <p class="text-xs text-gray-400 uppercase tracking-wider font-medium">Neomorfismo Dark</p>
+                </div>
+
+                <div class="neu-card p-6 text-center space-y-3 group">
+                    <div class="w-14 h-14 mx-auto neu-card-inset flex items-center justify-center text-pink-400 text-2xl group-hover:scale-110 transition duration-300">
+                        <i class="fa-solid fa-laptop-code"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-white">Full Stack</h3>
+                    <p class="text-xs text-gray-400 uppercase tracking-wider font-medium">Desarrollo Web</p>
+                </div>
+
+                <div class="neu-card p-6 text-center space-y-3 group">
+                    <div class="w-14 h-14 mx-auto neu-card-inset flex items-center justify-center text-emerald-400 text-2xl group-hover:scale-110 transition duration-300">
+                        <i class="fa-solid fa-circle-check"></i>
+                    </div>
+                    <h3 class="text-3xl font-bold text-white">Single File</h3>
+                    <p class="text-xs text-gray-400 uppercase tracking-wider font-medium">Despliegue GitHub Pages</p>
+                </div>
+            </section>
+
+            <!-- Projects Showcase Section -->
+            <section id="proyectos" class="space-y-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                    <div>
+                        <span class="text-xs font-semibold text-cyan-400 uppercase tracking-widest glow-text-cyan">Portafolio</span>
+                        <h3 class="text-3xl font-bold text-white mt-1">Proyectos en el Repositorio</h3>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="filterProjects('all')" class="neu-btn px-4 py-2 text-xs font-semibold text-cyan-400 filter-btn active" data-filter="all">Todos</button>
+                        <button onclick="filterProjects('web')" class="neu-btn px-4 py-2 text-xs font-semibold text-gray-400 filter-btn" data-filter="web">Web 3D</button>
+                        <button onclick="filterProjects('app')" class="neu-btn px-4 py-2 text-xs font-semibold text-gray-400 filter-btn" data-filter="app">Sistemas</button>
+                    </div>
+                </div>
+
+                <!-- Projects Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    
+                    <!-- Project Card 1 -->
+                    <div class="neu-card p-6 flex flex-col justify-between project-item" data-category="web">
+                        <div class="space-y-4">
+                            <div class="h-44 neu-card-inset flex items-center justify-center overflow-hidden relative group">
+                                <div class="w-full h-full bg-gradient-to-br from-cyan-900/40 to-slate-900 flex items-center justify-center">
+                                    <i class="fa-solid fa-cube text-6xl text-cyan-400/80 group-hover:rotate-12 group-hover:scale-125 transition duration-500"></i>
+                                </div>
+                                <span class="absolute top-3 right-3 neu-badge px-2.5 py-1 text-[10px] font-bold text-cyan-400">Three.js / HTML</span>
+                            </div>
+                            <h4 class="text-xl font-bold text-white">Portal Neomórfico 3D</h4>
+                            <p class="text-sm text-gray-400 leading-relaxed">
+                                Página de bienvenida interactiva de un solo archivo con fondo tridimensional y sombras suavizadas Neumorphic Dark UI.
+                            </p>
+                        </div>
+                        <div class="pt-6 mt-6 border-t border-white/5 flex justify-between items-center">
+                            <span class="text-xs text-gray-400"><i class="fa-solid fa-code text-cyan-400"></i> Vanilla JS</span>
+                            <a href="https://github.com/gilibarguenjuansebastian-cpu" target="_blank" class="neu-btn px-4 py-2 text-xs font-semibold text-cyan-400 flex items-center gap-1.5">
+                                Repositorio <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Project Card 2 -->
+                    <div class="neu-card p-6 flex flex-col justify-between project-item" data-category="app">
+                        <div class="space-y-4">
+                            <div class="h-44 neu-card-inset flex items-center justify-center overflow-hidden relative group">
+                                <div class="w-full h-full bg-gradient-to-br from-purple-900/40 to-slate-900 flex items-center justify-center">
+                                    <i class="fa-solid fa-chart-pie text-6xl text-purple-400/80 group-hover:-rotate-12 group-hover:scale-125 transition duration-500"></i>
+                                </div>
+                                <span class="absolute top-3 right-3 neu-badge px-2.5 py-1 text-[10px] font-bold text-purple-400">Dashboard UI</span>
+                            </div>
+                            <h4 class="text-xl font-bold text-white">Panel de Análisis Dark</h4>
+                            <p class="text-sm text-gray-400 leading-relaxed">
+                                Dashboard optimizado para visualización de métricas en sistemas oscuros con widgets modulares.
+                            </p>
+                        </div>
+                        <div class="pt-6 mt-6 border-t border-white/5 flex justify-between items-center">
+                            <span class="text-xs text-gray-400"><i class="fa-solid fa-chart-line text-purple-400"></i> Analytics</span>
+                            <a href="https://github.com/gilibarguenjuansebastian-cpu" target="_blank" class="neu-btn px-4 py-2 text-xs font-semibold text-purple-400 flex items-center gap-1.5">
+                                Repositorio <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Project Card 3 -->
+                    <div class="neu-card p-6 flex flex-col justify-between project-item" data-category="web">
+                        <div class="space-y-4">
+                            <div class="h-44 neu-card-inset flex items-center justify-center overflow-hidden relative group">
+                                <div class="w-full h-full bg-gradient-to-br from-pink-900/40 to-slate-900 flex items-center justify-center">
+                                    <i class="fa-solid fa-code text-6xl text-pink-400/80 group-hover:scale-125 transition duration-500"></i>
+                                </div>
+                                <span class="absolute top-3 right-3 neu-badge px-2.5 py-1 text-[10px] font-bold text-pink-400">Frontend</span>
+                            </div>
+                            <h4 class="text-xl font-bold text-white">Componentes Soft UI</h4>
+                            <p class="text-sm text-gray-400 leading-relaxed">
+                                Librería de diseño de componentes en CSS sin librerías externas enfocados en usabilidad y estética limpia.
+                            </p>
+                        </div>
+                        <div class="pt-6 mt-6 border-t border-white/5 flex justify-between items-center">
+                            <span class="text-xs text-gray-400"><i class="fa-brands fa-css3-alt text-pink-400"></i> Modern CSS</span>
+                            <a href="https://github.com/gilibarguenjuansebastian-cpu" target="_blank" class="neu-btn px-4 py-2 text-xs font-semibold text-pink-400 flex items-center gap-1.5">
+                                Repositorio <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Technical Skills Section -->
+            <section id="habilidades" class="space-y-8">
+                <div>
+                    <span class="text-xs font-semibold text-cyan-400 uppercase tracking-widest glow-text-cyan">Tech Stack</span>
+                    <h3 class="text-3xl font-bold text-white mt-1">Habilidades & Tecnologías</h3>
+                </div>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                    <div class="neu-card p-6 text-center space-y-3 group hover:border-orange-500/30">
+                        <div class="w-14 h-14 mx-auto neu-card-inset flex items-center justify-center text-orange-400 text-2xl group-hover:scale-110 transition duration-300">
+                            <i class="fa-brands fa-html5"></i>
+                        </div>
+                        <h4 class="font-semibold text-sm text-gray-200">HTML5</h4>
+                    </div>
+
+                    <div class="neu-card p-6 text-center space-y-3 group hover:border-blue-500/30">
+                        <div class="w-14 h-14 mx-auto neu-card-inset flex items-center justify-center text-blue-400 text-2xl group-hover:scale-110 transition duration-300">
+                            <i class="fa-brands fa-css3-alt"></i>
+                        </div>
+                        <h4 class="font-semibold text-sm text-gray-200">CSS3 / UI</h4>
+                    </div>
+
+                    <div class="neu-card p-6 text-center space-y-3 group hover:border-yellow-500/30">
+                        <div class="w-14 h-14 mx-auto neu-card-inset flex items-center justify-center text-yellow-400 text-2xl group-hover:scale-110 transition duration-300">
+                            <i class="fa-brands fa-js"></i>
+                        </div>
+                        <h4 class="font-semibold text-sm text-gray-200">JavaScript</h4>
+                    </div>
+
+                    <div class="neu-card p-6 text-center space-y-3 group hover:border-cyan-500/30">
+                        <div class="w-14 h-14 mx-auto neu-card-inset flex items-center justify-center text-cyan-400 text-2xl group-hover:scale-110 transition duration-300">
+                            <i class="fa-solid fa-cube"></i>
+                        </div>
+                        <h4 class="font-semibold text-sm text-gray-200">Three.js 3D</h4>
+                    </div>
+
+                    <div class="neu-card p-6 text-center space-y-3 group hover:border-purple-500/30">
+                        <div class="w-14 h-14 mx-auto neu-card-inset flex items-center justify-center text-purple-400 text-2xl group-hover:scale-110 transition duration-300">
+                            <i class="fa-brands fa-github"></i>
+                        </div>
+                        <h4 class="font-semibold text-sm text-gray-200">Git / GitHub</h4>
+                    </div>
+
+                    <div class="neu-card p-6 text-center space-y-3 group hover:border-teal-500/30">
+                        <div class="w-14 h-14 mx-auto neu-card-inset flex items-center justify-center text-teal-400 text-2xl group-hover:scale-110 transition duration-300">
+                            <i class="fa-solid fa-wind"></i>
+                        </div>
+                        <h4 class="font-semibold text-sm text-gray-200">Tailwind CSS</h4>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contact Section -->
+            <section id="contacto" class="neu-card p-8 md:p-12 space-y-8">
+                <div class="text-center max-w-xl mx-auto space-y-2">
+                    <span class="text-xs font-semibold text-cyan-400 uppercase tracking-widest glow-text-cyan">Contacto</span>
+                    <h3 class="text-3xl font-bold text-white">Conecta conmigo</h3>
+                    <p class="text-sm text-gray-400">
+                        ¿Quieres contactarme sobre algún repositorio o proyecto? Envía un mensaje.
+                    </p>
+                </div>
+
+                <form id="contactForm" class="max-w-2xl mx-auto space-y-6" onsubmit="handleSubmit(event)">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Nombre</label>
+                            <input type="text" required placeholder="Tu nombre" class="w-full px-4 py-3 neu-input text-sm">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Correo</label>
+                            <input type="email" required placeholder="correo@ejemplo.com" class="w-full px-4 py-3 neu-input text-sm">
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Mensaje</label>
+                        <textarea rows="4" required placeholder="Escribe tu mensaje..." class="w-full px-4 py-3 neu-input text-sm resize-none"></textarea>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="neu-btn px-8 py-3 text-sm font-semibold text-cyan-400 inline-flex items-center gap-2 hover:text-white">
+                            <i class="fa-solid fa-paper-plane"></i> Enviar Mensaje
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Modal Notification -->
+                <div id="successModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
+                    <div class="neu-card p-8 max-w-sm w-full text-center space-y-4">
+                        <div class="w-16 h-16 mx-auto neu-card-inset rounded-full flex items-center justify-center text-cyan-400 text-3xl">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-white">¡Mensaje Recibido!</h4>
+                        <p class="text-xs text-gray-400">Gracias por contactarme. Me pondré en contacto muy pronto.</p>
+                        <button onclick="closeModal()" class="neu-btn px-6 py-2 text-xs font-semibold text-cyan-400">Cerrar</button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="w-full py-8 px-6 md:px-12 mt-12 border-t border-white/5 backdrop-blur-md bg-[#1a1e29]/70">
+            <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+                <p class="text-xs text-gray-400">
+                    &copy; 2026 Juan Sebastian Gilibarguen (<span class="text-cyan-400 font-mono">@gilibarguenjuansebastian-cpu</span>). Tema Dark Neumorphic 3D.
+                </p>
+                <div class="flex space-x-4">
+                    <a href="https://github.com/gilibarguenjuansebastian-cpu" target="_blank" class="neu-btn w-9 h-9 flex items-center justify-center text-cyan-400 hover:text-white transition">
+                        <i class="fa-brands fa-github"></i>
+                    </a>
+                    <a href="#contacto" class="neu-btn w-9 h-9 flex items-center justify-center text-cyan-400 hover:text-white transition">
+                        <i class="fa-solid fa-envelope"></i>
+                    </a>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- 3D Scene and UI Logic JavaScript -->
+    <script>
+        // ----------------------------------------------------
+        // THREE.JS 3D BACKGROUND INTERACTION
+        // ----------------------------------------------------
+        let scene, camera, renderer, particlesMesh;
+        let mouseX = 0, mouseY = 0;
+
+        function init3D() {
+            const canvas = document.getElementById('canvas-bg');
+            scene = new THREE.Scene();
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 30;
+
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            // Particles geometry
+            const count = 150;
+            const geometry = new THREE.BufferGeometry();
+            const positions = new Float32Array(count * 3);
+            const colors = new Float32Array(count * 3);
+
+            const colorCyan = new THREE.Color(0x06b6d4);
+            const colorPurple = new THREE.Color(0x8b5cf6);
+
+            for (let i = 0; i < count * 3; i += 3) {
+                positions[i] = (Math.random() - 0.5) * 60;
+                positions[i + 1] = (Math.random() - 0.5) * 60;
+                positions[i + 2] = (Math.random() - 0.5) * 60;
+
+                const mixedColor = Math.random() > 0.5 ? colorCyan : colorPurple;
+                colors[i] = mixedColor.r;
+                colors[i + 1] = mixedColor.g;
+                colors[i + 2] = mixedColor.b;
+            }
+
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.7,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.6
+            });
+
+            particlesMesh = new THREE.Points(geometry, material);
+            scene.add(particlesMesh);
+
+            // Add subtle floating 3D Geometry
+            const torusGeo = new THREE.TorusKnotGeometry(4, 1.2, 100, 16);
+            const torusMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4, wireframe: true, transparent: true, opacity: 0.15 });
+            const torus = new THREE.Mesh(torusGeo, torusMat);
+            torus.position.set(-15, 5, -10);
+            scene.add(torus);
+
+            const icoGeo = new THREE.IcosahedronGeometry(6, 1);
+            const icoMat = new THREE.MeshBasicMaterial({ color: 0x8b5cf6, wireframe: true, transparent: true, opacity: 0.12 });
+            const ico = new THREE.Mesh(icoGeo, icoMat);
+            ico.position.set(18, -10, -5);
+            scene.add(ico);
+
+            // Animation Loop
+            function animate() {
+                requestAnimationFrame(animate);
+
+                particlesMesh.rotation.y += 0.001;
+                particlesMesh.rotation.x += 0.0005;
+
+                torus.rotation.x += 0.005;
+                torus.rotation.y += 0.007;
+
+                ico.rotation.x += 0.004;
+                ico.rotation.y += 0.003;
+
+                // Mouse interactivity
+                camera.position.x += (mouseX * 0.05 - camera.position.x) * 0.05;
+                camera.position.y += (-mouseY * 0.05 - camera.position.y) * 0.05;
+                camera.lookAt(scene.position);
+
+                renderer.render(scene, camera);
+            }
+
+            animate();
+        }
+
+        // Mouse motion handler
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX - window.innerWidth / 2) / 100;
+            mouseY = (e.clientY - window.innerHeight / 2) / 100;
+        });
+
+        // Resize Canvas on Window Resize
+        window.addEventListener('resize', () => {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+        });
+
+        // Start 3D animation on window load
+        window.onload = function() {
+            init3D();
+        };
+
+        // Filter projects function
+        function filterProjects(category) {
+            const items = document.querySelectorAll('.project-item');
+            const buttons = document.querySelectorAll('.filter-btn');
+
+            buttons.forEach(btn => {
+                btn.classList.remove('active', 'text-cyan-400');
+                btn.classList.add('text-gray-400');
+                if (btn.getAttribute('data-filter') === category) {
+                    btn.classList.add('active', 'text-cyan-400');
+                }
+            });
+
+            items.forEach(item => {
+                if (category === 'all' || item.getAttribute('data-category') === category) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        // Form handler without using alert()
+        function handleSubmit(event) {
+            event.preventDefault();
+            document.getElementById('successModal').classList.remove('hidden');
+            document.getElementById('contactForm').reset();
+        }
+
+        function closeModal() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
